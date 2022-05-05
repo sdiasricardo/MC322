@@ -1,0 +1,5 @@
+Na classe lacaio, não é possível acessar diretamente o atributo nome, visto que esse 
+atributo é declarado como private, ou seja, apenas a própria classe(Carta) tem 
+acesso a ele.
+Para que a classe herdeira (Lacaio) pudesse acessá-lo, seria necessário que ele fosse
+declarado como "protected" ou como "public"

@@ -1,0 +1,26 @@
+1: Ao tentar adicionar mais do que 10 cartas, o erro "Index 10 out of bounds for length 10",
+
+2: O construtor da classe Baralho inicia nCartas como 0. Ao chamar o método comprarCarta,
+, esse valor de nCartas é decrescido em 1 unidade. Logo, como o baralho está vazio (nCartas =0)
+, esse índice é atualizado para -1, que está fora do range acessível do vetor
+
+3: O atributo gerador pode ser considerado static pois independe da condição do objeto,
+ou seja, se aplica diretamente a classe. A diferença é que, para um atributo estático,
+seu escopo se traduz na classe a qual ele pertence. Ja para um não estatico, o escopo
+é o objeto em questão. Isso significa que, independente da instanciação ou não de um objeto
+da classe em questão, o atributo estático ja estará criado, em oposição ao não estático, que será
+criado toda vez que um novo objeto da classe for instanciado
+
+4: O gerador não é iniciado pois, por se tratar de um atributo estático, ele diz respeito
+à classe, e não aos objetos dela. Logo, não é necessário iniciar o atributo estático
+sempre que um novo objeto for instanciado. Nesse caso, o comando new Random() será
+executado apenas 1 vez.
+
+5: A classe Util possui o benefício de organização, somados aos seus métodos estáticos, que
+não exigem a instanciação de novos objetos para a utilização de seus métodos. 
+
+6:A implementação da classe Baralho utilizando array list permite uma melhor utilização
+de memória, visto que, nesse caso, não há posições vazias no baralho. Além disso,
+a criação do atributo "nCartas" também se torna inútil, visto que há um método de ArrayList que
+fornece seu tamanho. Por fim, a classe ArrayList ja possui consigo diversos métodos
+(como shuffle e reverse) que facilitam a manipulação de seus objetos.

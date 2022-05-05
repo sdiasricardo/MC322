@@ -1,0 +1,13 @@
+1 - Quando o objeto da Classe CartaLacaio é instanciado utilizando o construtor reduzido, os atributos não instanciados por ele são iinicializados com o valor 0,
+pois este é o valor default deste tipo.
+
+3 - Quando não há o método toString da classe CartaMagia e a impressão de um obeto dela é chamada, é impresso o endereço de memoria do método em questão, visto
+que essa função ja existe por padrão em arquivos.java e retorna o endereço do objeto
+
+4 - Quando um objeto da classe CartaLacaio é criado utilizando o construtor cópia, não há nenhuma diferença na impressão entre ele e o objeto que foi copiado
+
+5 - Quando o atributo nome é posto como public, ambos os comandos imprimem o nome do objeto em questão. Quando ele é posto como privado, a tentativa de impressão
+utilizando um acesso direto (mag1.nome()) resulta em um código de erro, que diz que o atributo não é visível. A utilização de atributos privados e criação de metodos
+get e set segue o prinicípio da menor prioridade, a fim de garantir que não haja alteração de campos de objetos de forma não intencional por classes ou métodos que não
+deveriam faze-lo
+ 
