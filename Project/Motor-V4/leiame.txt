@@ -1,0 +1,12 @@
+MC302 - Programação Orientada a Objetos
+
+Objetivo: Este arquivo contém instruções de como montar seu projeto no Eclipse para o Trabalho 1,
+utilizando-se do código fornecido, exemplos e documentação.
+
+Instruções:
+
+1) Crie um projeto no ecplise a partir de um em arquivo: "File" -> "Open Project from File System" -> Selecione o Diretorio Motor-V4.
+2) Neste momento irão aparecer diversos erros e warnings no Eclipse.
+3) Clique com o botão direito no seu projeto "Motor-v4", selecione "Build Path" -> "Configure Build Path". Vai abrir uma janela, clique em "Classpath" -> "Add Class Folder" e selecione a pasta bin que está dentro do Motor-V4.
+
+Nesse momento o Eclipse já deve ter reconhecido o código, documentação e arquivos extras. Já deve ser possível compilar e testar o exemplo disponibilizado.
