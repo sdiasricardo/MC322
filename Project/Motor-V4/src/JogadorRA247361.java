@@ -8,7 +8,9 @@ import java.util.ArrayList;
 public class JogadorRA247361 extends Jogador {
 	private ArrayList<CartaLacaio> lacaios;
 	private ArrayList<CartaLacaio> lacaiosOponente;
-	
+	private Comportamento orgBaralho;
+	private Comportamento comportamentoAtual;
+
 	/**
 	  * O método construtor do JogadorAleatorio.
 	  * 
@@ -74,4 +76,108 @@ public class JogadorRA247361 extends Jogador {
 		
 		return minhasJogadas;
 	}
+
+
+	private ArrayList<Jogada> modoAgressivo(int minhaMana, Mesa mesa){
+		CartaMagia mag1;
+		CartaLacaio lac1;
+		CartaMagia mag2;
+		CartaLacaio lac2;
+		ArrayList<Jogada> jogadas = new ArrayList<Jogada>();
+
+		if(orgBaralho != Comportamento.AGRESSIVO){ // Caso o baralho não esteja organizado para o tipo de jogada
+			// agressiva, ele deve ser organizado seguindo a ordem:
+			// Lacaio(Alto ataque) -> Lacaio(Baixo Ataque) -> Magia de Alvo -> Magia de Área -> Magia de buff. Para
+			// os lacaios, a mana é o critério de desempate, ou seja, quem possui a menor mana deve ser baixado primeiro
+			// Para as magias, não há critério de desempate.
+
+			orgBaralho = Comportamento.AGRESSIVO;
+			for(int i = 0; i < mao.size(); i++) {
+				for (int j = 0; j <  mao.size() - i - 1; j++){
+
+					if(mao.get(j) instanceof CartaLacaio){ // Caso em que j é um lacaio
+						lac1 = (CartaLacaio) mao.get(j);
+
+						if(mao.get(j + 1) instanceof CartaLacaio) { // A substituição deve ser verificada apenas
+							// se a proxima carta for um lacaio. Do contrário, a ordem deve ser mantida
+							lac2 = (CartaLacaio) mao.get(j + 1);
+							if ((lac1.getAtaque() < lac2.getAtaque()) ||
+									(lac1.getAtaque() == lac2.getAtaque() && lac1.getMana() > lac2.getMana())) {
+								mao.set(j, lac2);
+								mao.set(j + 1, lac1);
+							}
+
+						}
+					}else{ // Caso em que j é uma CartaMagia
+						mag1 = (CartaMagia) mao.get(j);
+						if(mao.get(j + 1) instanceof CartaLacaio){
+							lac1 = (CartaLacaio) mao.get(j + 1);
+							mao.set(j, lac1);
+							mao.set(j + 1, mag1);
+						}else{
+							mag2 = (CartaMagia) mao.get(j + 1);
+							if(mag2.getMagiaTipo() == TipoMagia.ALVO && (mag1.getMagiaTipo() == TipoMagia.AREA
+							 || mag1.getMagiaTipo() == TipoMagia.BUFF)){
+								mao.set(j, mag2);
+								mao.set(j + 1, mag1);
+							}else if(mag2.getMagiaTipo() == TipoMagia.ALVO && mag1.getMagiaTipo() == TipoMagia.ALVO){
+								if(mag2.getMagiaDano() > mag2.getMagiaDano()){
+									mao.set(j, mag2);
+									mao.set(j + 1, mag1);
+								}
+							}else if(mag2.getMagiaTipo() == TipoMagia.AREA && mag1.getMagiaTipo() == TipoMagia.BUFF) {
+								mao.set(j, mag2);
+								mao.set(j + 1, mag1);
+							}else if(mag2.getMagiaTipo() == TipoMagia.AREA && mag1.getMagiaTipo() == TipoMagia.AREA){
+								if(mag2.getMagiaDano() > mag2.getMagiaDano()){
+									mao.set(j, mag2);
+									mao.set(j + 1, mag1);
+								}
+							}
+						}
+					}
+
+				}
+			}
+		}
+		// Após as cartas estarem organizadas, será feita a sequência de jogadas.
+		// Neste modo, são colocados à mesa todos os lacaios, por ordem de maior ataque.
+		// Depois, se ainda restar mana, são utilizadas as cartas de magia no herói inimigo. Por fim,
+		// os lacaios que ja estão na mesa executam seus ataques ao inimigo.
+
+		for(int i = 0; i < mao.size(); i++){ // Baixando todos os lacaios possíveis e utilizando as
+			// magias
+			Carta card = mao.get(i);
+			if(minhaMana != 0) {
+				if (card instanceof CartaLacaio && card.getMana() <= minhaMana) {
+					Jogada lac = new Jogada(TipoJogada.LACAIO, card, null);
+					jogadas.add(lac);
+					minhaMana -= card.getMana();
+					System.out.println("Jogada: Decidi uma jogada de baixar o lacaio: " + card);
+					mao.remove(i);
+					i--;
+				} else if (card instanceof CartaMagia && card.getMana() <= minhaMana) {
+					if (((CartaMagia) card).getMagiaTipo() == TipoMagia.ALVO ||
+							((CartaMagia) card).getMagiaTipo() == TipoMagia.AREA) {
+						Jogada mag = new Jogada(TipoJogada.MAGIA, card, null);
+						jogadas.add(mag);
+						minhaMana -= card.getMana();
+						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + card);
+						mao.remove(i);
+						i--;
+					}
+				}
+			}
+		}
+		for (Carta card : lacaios) {
+			Jogada lac = new Jogada(TipoJogada.ATAQUE, card, null);
+			jogadas.add(lac);
+			System.out.println("Jogada: Decidi uma jogada de atacar com o lacaio: " + card);
+		}
+		return jogadas;
+	}
+}
+
+enum Comportamento{ // Enum para definir em qual estado o jogador está jogando e como o baralho está organizado
+	AGRESSIVO, CONTROLE, MANA
 }
