@@ -23,9 +23,12 @@ public class JogadorRA247361 extends Jogador {
 		mao = maoInicial;
 		lacaios = new ArrayList<CartaLacaio>();
 		lacaiosOponente = new ArrayList<CartaLacaio>();
+		orgBaralho = Comportamento.AGRESSIVO;
+		comportamentoAtual = null;
+		organizaBaralho();
 		
 		// Mensagens de depuração:
-		System.out.println("*Classe JogadorRAxxxxxx* Sou o " + (primeiro?"primeiro":"segundo") + " jogador (classe: JogadorAleatorio)");
+		System.out.println("*Classe JogadorRA247361* Sou o " + (primeiro?"primeiro":"segundo") + " jogador (classe: JogadorAleatorio)");
 		System.out.println("Mao inicial:");
 		for(int i = 0; i < mao.size(); i++)
 			System.out.println("ID " + mao.get(i).getID() + ": " + mao.get(i));
@@ -41,8 +44,63 @@ public class JogadorRA247361 extends Jogador {
 	  */
 	public ArrayList<Jogada> processarTurno (Mesa mesa, Carta cartaComprada, ArrayList<Jogada> jogadasOponente){
 		int minhaMana, minhaVida;
-		if(cartaComprada != null)
-			mao.add(cartaComprada);
+
+		if(cartaComprada != null){ // Inserindo a carta comprada na mão conforme a organização esperada
+			if(cartaComprada instanceof CartaLacaio){
+				for(int i=0; i < mao.size(); i++){
+					if(mao.get(i) instanceof CartaLacaio) {
+						if (((CartaLacaio) mao.get(i)).getAtaque() < ((CartaLacaio) cartaComprada).getAtaque()) {
+							mao.add(i, cartaComprada);
+							break;
+						}
+					}else{
+						mao.add(i, cartaComprada);
+						break;
+					}
+				}
+			}else{
+				for(int i=0; i < mao.size(); i++) {
+					if(!(mao.get(i) instanceof CartaLacaio)) {
+						if (((CartaMagia) cartaComprada).getMagiaTipo() == TipoMagia.ALVO) {
+							if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.ALVO) {
+								if (((CartaMagia) mao.get(i)).getMagiaDano() < ((CartaMagia) cartaComprada).getMagiaDano()) {
+									mao.add(i, cartaComprada);
+									break;
+								}
+							}else{
+								mao.add(i, cartaComprada);
+								break;
+							}
+						}else if(((CartaMagia) cartaComprada).getMagiaTipo() == TipoMagia.AREA){
+							if(((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.AREA){
+								if (((CartaMagia) mao.get(i)).getMagiaDano() < ((CartaMagia) cartaComprada).getMagiaDano()) {
+									mao.add(i, cartaComprada);
+									break;
+								}
+							}else if(((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.BUFF){
+								mao.add(i, cartaComprada);
+								break;
+							}
+						}else{
+							if(((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.BUFF){
+								if (((CartaMagia) mao.get(i)).getMagiaDano() < ((CartaMagia) cartaComprada).getMagiaDano()) {
+									mao.add(i, cartaComprada);
+									break;
+								}else if(i== mao.size()){
+									mao.add(i, cartaComprada);
+									break;
+								}
+							}else if(i== mao.size()){
+								mao.add(i, cartaComprada);
+								break;
+							}
+						}
+					}
+				}
+			}
+
+
+		}
 		if(primeiroJogador){
 			minhaMana = mesa.getManaJog1();
 			minhaVida = mesa.getVidaHeroi1();
@@ -58,89 +116,77 @@ public class JogadorRA247361 extends Jogador {
 			//System.out.println("--------------------------------- Começo de turno pro jogador2");
 		}
 		
-		ArrayList<Jogada> minhasJogadas = new ArrayList<Jogada>();
+		ArrayList<Jogada> minhasJogadas;
 		
 		// O laço abaixo cria jogas de baixar lacaios da mão para a mesa se houver mana disponível.
-		for(int i = 0; i < mao.size(); i++){
-			Carta card = mao.get(i);
-			if(card instanceof CartaLacaio && card.getMana() <= minhaMana){
-				Jogada lac = new Jogada(TipoJogada.LACAIO, card, null);
-				minhasJogadas.add(lac);
-				minhaMana -= card.getMana();
-				System.out.println("Jogada: Decidi uma jogada de baixar o lacaio: "+ card);
-				mao.remove(i);
-				i--;
-			}
-		}
-		
+		minhasJogadas = modoAgressivo(minhaMana);
 		
 		return minhasJogadas;
 	}
 
-
-	private ArrayList<Jogada> modoAgressivo(int minhaMana, Mesa mesa){
+	private void organizaBaralho(){// Para facilitar as operações, após a chamada do construtor, a mão do jogador
+		// será organizada da seguinte forma:
+		// Lacaio(Alto ataque) -> Lacaio(Baixo Ataque) -> Magia de Alvo -> Magia de Área -> Magia de buff. Para
+		// os lacaios, a mana é o critério de desempate, ou seja, quem possui a menor mana deve ser baixado primeiro
+		// Para as magias, não há critério de desempate.
 		CartaMagia mag1;
 		CartaLacaio lac1;
 		CartaMagia mag2;
 		CartaLacaio lac2;
-		ArrayList<Jogada> jogadas = new ArrayList<Jogada>();
+		for(int i = 0; i < mao.size(); i++) {
+			for (int j = 0; j <  mao.size() - i - 1; j++){
 
-		if(orgBaralho != Comportamento.AGRESSIVO){ // Caso o baralho não esteja organizado para o tipo de jogada
-			// agressiva, ele deve ser organizado seguindo a ordem:
-			// Lacaio(Alto ataque) -> Lacaio(Baixo Ataque) -> Magia de Alvo -> Magia de Área -> Magia de buff. Para
-			// os lacaios, a mana é o critério de desempate, ou seja, quem possui a menor mana deve ser baixado primeiro
-			// Para as magias, não há critério de desempate.
+				if(mao.get(j) instanceof CartaLacaio){ // Caso em que j é um lacaio
+					lac1 = (CartaLacaio) mao.get(j);
 
-			orgBaralho = Comportamento.AGRESSIVO;
-			for(int i = 0; i < mao.size(); i++) {
-				for (int j = 0; j <  mao.size() - i - 1; j++){
-
-					if(mao.get(j) instanceof CartaLacaio){ // Caso em que j é um lacaio
-						lac1 = (CartaLacaio) mao.get(j);
-
-						if(mao.get(j + 1) instanceof CartaLacaio) { // A substituição deve ser verificada apenas
-							// se a proxima carta for um lacaio. Do contrário, a ordem deve ser mantida
-							lac2 = (CartaLacaio) mao.get(j + 1);
-							if ((lac1.getAtaque() < lac2.getAtaque()) ||
-									(lac1.getAtaque() == lac2.getAtaque() && lac1.getMana() > lac2.getMana())) {
-								mao.set(j, lac2);
-								mao.set(j + 1, lac1);
-							}
-
+					if(mao.get(j + 1) instanceof CartaLacaio) { // A substituição deve ser verificada apenas
+						// se a proxima carta for um lacaio. Do contrário, a ordem deve ser mantida
+						lac2 = (CartaLacaio) mao.get(j + 1);
+						if ((lac1.getAtaque() < lac2.getAtaque()) ||
+								(lac1.getAtaque() == lac2.getAtaque() && lac1.getMana() > lac2.getMana())) {
+							mao.set(j, lac2);
+							mao.set(j + 1, lac1);
 						}
-					}else{ // Caso em que j é uma CartaMagia
-						mag1 = (CartaMagia) mao.get(j);
-						if(mao.get(j + 1) instanceof CartaLacaio){
-							lac1 = (CartaLacaio) mao.get(j + 1);
-							mao.set(j, lac1);
+
+					}
+				}else{ // Caso em que j é uma CartaMagia
+					mag1 = (CartaMagia) mao.get(j);
+					if(mao.get(j + 1) instanceof CartaLacaio){
+						lac1 = (CartaLacaio) mao.get(j + 1);
+						mao.set(j, lac1);
+						mao.set(j + 1, mag1);
+					}else{
+						mag2 = (CartaMagia) mao.get(j + 1);
+						if(mag2.getMagiaTipo() == TipoMagia.ALVO && (mag1.getMagiaTipo() == TipoMagia.AREA
+								|| mag1.getMagiaTipo() == TipoMagia.BUFF)){
+							mao.set(j, mag2);
 							mao.set(j + 1, mag1);
-						}else{
-							mag2 = (CartaMagia) mao.get(j + 1);
-							if(mag2.getMagiaTipo() == TipoMagia.ALVO && (mag1.getMagiaTipo() == TipoMagia.AREA
-							 || mag1.getMagiaTipo() == TipoMagia.BUFF)){
+						}else if(mag2.getMagiaTipo() == TipoMagia.ALVO && mag1.getMagiaTipo() == TipoMagia.ALVO){
+							if(mag2.getMagiaDano() > mag2.getMagiaDano()){
 								mao.set(j, mag2);
 								mao.set(j + 1, mag1);
-							}else if(mag2.getMagiaTipo() == TipoMagia.ALVO && mag1.getMagiaTipo() == TipoMagia.ALVO){
-								if(mag2.getMagiaDano() > mag2.getMagiaDano()){
-									mao.set(j, mag2);
-									mao.set(j + 1, mag1);
-								}
-							}else if(mag2.getMagiaTipo() == TipoMagia.AREA && mag1.getMagiaTipo() == TipoMagia.BUFF) {
+							}
+						}else if(mag2.getMagiaTipo() == TipoMagia.AREA && mag1.getMagiaTipo() == TipoMagia.BUFF) {
+							mao.set(j, mag2);
+							mao.set(j + 1, mag1);
+						}else if(mag2.getMagiaTipo() == TipoMagia.AREA && mag1.getMagiaTipo() == TipoMagia.AREA){
+							if(mag2.getMagiaDano() > mag2.getMagiaDano()){
 								mao.set(j, mag2);
 								mao.set(j + 1, mag1);
-							}else if(mag2.getMagiaTipo() == TipoMagia.AREA && mag1.getMagiaTipo() == TipoMagia.AREA){
-								if(mag2.getMagiaDano() > mag2.getMagiaDano()){
-									mao.set(j, mag2);
-									mao.set(j + 1, mag1);
-								}
 							}
 						}
 					}
-
 				}
+
 			}
 		}
-		// Após as cartas estarem organizadas, será feita a sequência de jogadas.
+	}
+
+
+	private ArrayList<Jogada> modoAgressivo(int minhaMana){
+		ArrayList<Jogada> jogadas = new ArrayList<>();
+
+
 		// Neste modo, são colocados à mesa todos os lacaios, por ordem de maior ataque.
 		// Depois, se ainda restar mana, são utilizadas as cartas de magia no herói inimigo. Por fim,
 		// os lacaios que ja estão na mesa executam seus ataques ao inimigo.
@@ -165,15 +211,40 @@ public class JogadorRA247361 extends Jogador {
 						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + card);
 						mao.remove(i);
 						i--;
+					}else if(((CartaMagia) card).getMagiaTipo() == TipoMagia.BUFF){
+						// A carta de buff será usada no lacaio de maior ataque, que precisa ser identificado
+						// entre os lacaios da mesa, como feito a seguir
+						CartaLacaio lacAtq = lacaios.get(i);
+						for(Carta bigger: lacaios){
+							if(((CartaLacaio) bigger).getAtaque() > lacAtq.getAtaque()){
+								bigger = lacAtq;
+							}
+						}
+
+						Jogada mag = new Jogada(TipoJogada.MAGIA, card, lacAtq);
+						jogadas.add(mag);
+						minhaMana -= card.getMana();
+						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + card);
+						mao.remove(i);
 					}
 				}
 			}
 		}
+
 		for (Carta card : lacaios) {
 			Jogada lac = new Jogada(TipoJogada.ATAQUE, card, null);
 			jogadas.add(lac);
 			System.out.println("Jogada: Decidi uma jogada de atacar com o lacaio: " + card);
 		}
+		return jogadas;
+	}
+
+	private ArrayList<Jogada> modoCurvaMana(int minhaMana, Mesa mesa){
+		ArrayList<Jogada> jogadas = new ArrayList<>();
+		// Nesse modo de jogo, é priorizado a utilização mais eficiente da mana d
+
+
+
 		return jogadas;
 	}
 }

@@ -31,10 +31,10 @@ public class Main {
 		int tempoLimite = 0;
 		
 		// Rotina que executa uma partida de LaMa utilizando a GUI
-		umaPartidaGUI(baralho1, baralho2, verbosidade, tempoLimite);
+		//umaPartidaGUI(baralho1, baralho2, verbosidade, tempoLimite);
 		
 		// Rotina que executa uma partida de LaMa
-		//umaPartida(baralho1, baralho2, verbosidade, tempoLimite);
+		umaPartida(baralho1, baralho2, verbosidade, tempoLimite);
 		
 		// Rotina que executa múltiplas partidas de LaMa
 		//multiplasPartidas(baralho1, baralho2, verbosidade, tempoLimite, 10000);
@@ -99,7 +99,7 @@ public class Main {
 		//JogadorAleatorioNewbie jogA = new JogadorAleatorioNewbie(mao1clone, true);
 		//JogadorAleatorioFace jogB = new JogadorAleatorioFace(mao2clone, false);
 		JogadorAleatorio jogA = new JogadorAleatorio(mao1clone, true);
-		JogadorAleatorio jogB = new JogadorAleatorio(mao2clone, false);
+		JogadorRA247361 jogB = new JogadorRA247361(mao2clone, false);
 		
 		// O Motor é construído
 		Motor partida = new Motor(baralho1, baralho2, Mao1, Mao2, jogA, jogB, verbosidade, tempoLimite, "classe jogA", "classe jobB", gui);
@@ -148,7 +148,7 @@ public class Main {
 		//JogadorAleatorioNewbie jogA = new JogadorAleatorioNewbie(mao1clone, true);
 		//JogadorAleatorioFace jogB = new JogadorAleatorioFace(mao2clone, false);
 		JogadorAleatorio jogA = new JogadorAleatorio(mao1clone, true);
-		JogadorAleatorio jogB = new JogadorAleatorio(mao2clone, false);
+		JogadorRA247361 jogB = new JogadorRA247361(mao2clone, false);
 		
 		// O Motor é construído
 		Motor partida = new Motor(baralho1, baralho2, Mao1, Mao2, jogA, jogB, verbosidade, tempoLimite, "classe jogA", "classe jobB");
@@ -211,7 +211,7 @@ public class Main {
 				
 				// Inicializa os Jogadores devidamente (com as cartas da mão e o argumento 'primeiro').
 				JogadorAleatorio jogA = new JogadorAleatorio(mao1clone, moeda);
-				JogadorAleatorio jogB = new JogadorAleatorio(mao2clone, !moeda);
+				JogadorRA247361 jogB = new JogadorRA247361(mao2clone, !moeda);
 				
 				// O Motor é construído
 				Motor partida;
