@@ -191,7 +191,7 @@ public class JogadorRA247361 extends Jogador {
 			Carta card = mao.get(i);
 			if(minhaMana != 0) {
 
-				if (card instanceof CartaLacaio && card.getMana() <= minhaMana) {
+				if (card instanceof CartaLacaio && card.getMana() <= minhaMana && lacaios.size() < 7) {
 					Jogada lac = new Jogada(TipoJogada.LACAIO, card, null);
 					jogadas.add(lac);
 					minhaMana -= card.getMana();
@@ -272,21 +272,37 @@ public class JogadorRA247361 extends Jogador {
 						jogadas.add(mag);
 						minhaMana -= mao.get(i).getMana();
 						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
+
+
+						for(int j=0; j<lacaiosOponente.size(); j++){
+							if(lacaiosOponente.get(j).getVidaAtual() <= ((CartaMagia) mao.get(i)).getMagiaDano()){
+								lacaiosOponente.remove(j);
+								j--;
+							}
+						}
 						mao.remove(i);
 						i--;
+
 					}
 
 				} else if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.ALVO && mao.get(i).getMana() <= minhaMana) {
 
-					for (CartaLacaio inimigo : lacaiosOponente) {
-						if (((CartaMagia) mao.get(i)).getMagiaDano() >= inimigo.getVidaAtual() &&
-								((CartaMagia) mao.get(i)).getMagiaDano() - inimigo.getVidaAtual() <= 1) {
-							Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), inimigo);
+					for (int j=0; j < lacaiosOponente.size(); j++) {
+						if (((CartaMagia) mao.get(i)).getMagiaDano() >= lacaiosOponente.get(j).getVidaAtual() &&
+								((CartaMagia) mao.get(i)).getMagiaDano() - lacaiosOponente.get(j).getVidaAtual() <= 1) {
+							
+							Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), lacaiosOponente.get(j));
 							jogadas.add(mag);
 							minhaMana -= mao.get(i).getMana();
 							System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
+
+							if(lacaiosOponente.get(j).getVidaAtual() <= ((CartaMagia) mao.get(i)).getMagiaDano()){
+								lacaiosOponente.remove(lacaiosOponente.get(j));
+							}
+
 							mao.remove(i);
 							i--;
+							break;
 						}
 					}
 				}
@@ -320,8 +336,6 @@ public class JogadorRA247361 extends Jogador {
 						System.out.println("Jogada: Decidi uma jogada de realizar uma troca: " + lacaios.get(i));
 						usado = true;
 						lacaiosOponente.remove(j);
-						lacaios.remove(i);
-						i--;
 						break;
 
 					}else{ // Caso em que ambos os lacaios morrem
