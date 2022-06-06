@@ -119,7 +119,7 @@ public class JogadorRA247361 extends Jogador {
 		ArrayList<Jogada> minhasJogadas;
 		
 		// O laço abaixo cria jogas de baixar lacaios da mão para a mesa se houver mana disponível.
-		minhasJogadas = modoAgressivo(minhaMana);
+		minhasJogadas = modoControle(minhaMana);
 		
 		return minhasJogadas;
 	}
@@ -183,18 +183,14 @@ public class JogadorRA247361 extends Jogador {
 	}
 
 
-	private ArrayList<Jogada> modoAgressivo(int minhaMana){
-		ArrayList<Jogada> jogadas = new ArrayList<>();
-
-
-		// Neste modo, são colocados à mesa todos os lacaios, por ordem de maior ataque.
-		// Depois, se ainda restar mana, são utilizadas as cartas de magia no herói inimigo. Por fim,
-		// os lacaios que ja estão na mesa executam seus ataques ao inimigo.
+	private void baixaLacaios(int minhaMana, ArrayList<Jogada> jogadas){
+		// Método que baixa todos os lacaios possíveis, e utiliza as magias restantes para atacar o herói inimigo
 
 		for(int i = 0; i < mao.size(); i++){ // Baixando todos os lacaios possíveis e utilizando as
 			// magias
 			Carta card = mao.get(i);
 			if(minhaMana != 0) {
+
 				if (card instanceof CartaLacaio && card.getMana() <= minhaMana) {
 					Jogada lac = new Jogada(TipoJogada.LACAIO, card, null);
 					jogadas.add(lac);
@@ -202,7 +198,9 @@ public class JogadorRA247361 extends Jogador {
 					System.out.println("Jogada: Decidi uma jogada de baixar o lacaio: " + card);
 					mao.remove(i);
 					i--;
+
 				} else if (card instanceof CartaMagia && card.getMana() <= minhaMana) {
+
 					if (((CartaMagia) card).getMagiaTipo() == TipoMagia.ALVO ||
 							((CartaMagia) card).getMagiaTipo() == TipoMagia.AREA) {
 						Jogada mag = new Jogada(TipoJogada.MAGIA, card, null);
@@ -211,12 +209,15 @@ public class JogadorRA247361 extends Jogador {
 						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + card);
 						mao.remove(i);
 						i--;
-					}else if(((CartaMagia) card).getMagiaTipo() == TipoMagia.BUFF){
+
+					}else if(((CartaMagia) card).getMagiaTipo() == TipoMagia.BUFF && lacaios.size() != 0){
 						// A carta de buff será usada no lacaio de maior ataque, que precisa ser identificado
-						// entre os lacaios da mesa, como feito a seguir
-						CartaLacaio lacAtq = lacaios.get(i);
-						for(Carta bigger: lacaios){
-							if(((CartaLacaio) bigger).getAtaque() > lacAtq.getAtaque()){
+						// entre os lacaios da mesa, como feito a seguir. Isso só ocorre caso existam lacaios
+						// baixadaos na mesa
+
+						CartaLacaio lacAtq = lacaios.get(0);
+						for(CartaLacaio bigger: lacaios){
+							if(bigger.getAtaque() > lacAtq.getAtaque()){
 								bigger = lacAtq;
 							}
 						}
@@ -226,11 +227,25 @@ public class JogadorRA247361 extends Jogador {
 						minhaMana -= card.getMana();
 						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + card);
 						mao.remove(i);
+						i--;
 					}
 				}
 			}
 		}
+	}
 
+
+
+	private ArrayList<Jogada> modoAgressivo(int minhaMana){
+		ArrayList<Jogada> jogadas = new ArrayList<>();
+		// Neste modo, são colocados à mesa todos os lacaios, por ordem de maior ataque.
+		// Depois, se ainda restar mana, são utilizadas as cartas de magia no herói inimigo. Por fim,
+		// os lacaios que ja estão na mesa executam seus ataques ao inimigo.
+
+		baixaLacaios(minhaMana, jogadas);
+
+		// Após baixar todos os possíveis lacaios, os lacaios ja presentes na mesa serão utilizados para
+		// atacar o herói inimigo
 		for (Carta card : lacaios) {
 			Jogada lac = new Jogada(TipoJogada.ATAQUE, card, null);
 			jogadas.add(lac);
@@ -239,11 +254,104 @@ public class JogadorRA247361 extends Jogador {
 		return jogadas;
 	}
 
-	private ArrayList<Jogada> modoCurvaMana(int minhaMana, Mesa mesa){
+
+	private ArrayList<Jogada> modoControle(int minhaMana){
 		ArrayList<Jogada> jogadas = new ArrayList<>();
-		// Nesse modo de jogo, é priorizado a utilização mais eficiente da mana d
+		// Nesse modo de jogo, objetiva-se ter controle sobre a mesa. Para isso, primeiro serão eliminados
+		// o maior número de lacaios do oponente possível utilizando as magias (seguindo as regras descritas
+		// na descrição da jogdada).
+
+			// Primeiro, serão utilizadas as magias para eliminar os possíveis lacaios da mão do oponente
+
+		for(int i =0; i < mao.size(); i++) { // Iterando sobre as cartas
+			if (mao.get(i) instanceof CartaMagia) {
+
+				if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.AREA && mao.get(i).getMana() <= minhaMana) {
+					if (lacaiosOponente.size() >= 2) {
+						Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), null);
+						jogadas.add(mag);
+						minhaMana -= mao.get(i).getMana();
+						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
+						mao.remove(i);
+						i--;
+					}
+
+				} else if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.ALVO && mao.get(i).getMana() <= minhaMana) {
+
+					for (CartaLacaio inimigo : lacaiosOponente) {
+						if (((CartaMagia) mao.get(i)).getMagiaDano() >= inimigo.getVidaAtual() &&
+								((CartaMagia) mao.get(i)).getMagiaDano() - inimigo.getVidaAtual() <= 1) {
+							Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), inimigo);
+							jogadas.add(mag);
+							minhaMana -= mao.get(i).getMana();
+							System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
+							mao.remove(i);
+							i--;
+						}
+					}
+				}
+			}
+		}
 
 
+		// Após a utilização de todas as magias possíveis para a eliminação dos Lacaios inimigos, serão
+		// baixados todos os lacaios possíveis, utilizando as magias restantes para atacar o herói do oponente
+		// e as magias de buff para buffar os lacaios da mesa.
+
+		baixaLacaios(minhaMana, jogadas);
+
+		// Após baixar todos os lacaios, serão realizadas as trocas favoráveis com os lacaios ja presentes
+		// na mesa. Aqueles lacaios que não encontrarem trocas favoráveis atacarão o herói inimigo.
+
+		for(int i=0; i< lacaios.size(); i++){ // Iterando sobre os lacaios ja baixados
+			boolean usado = false;
+
+			for(int j=0; j< lacaiosOponente.size(); j++){ // Iterando sobre os lacaios do oponente, para
+				// verificar se há alguma troca favorável
+
+				if(lacaios.get(i).getAtaque() >= lacaiosOponente.get(j).getVidaAtual()){ // Verificando se o lacaio do oponente
+					// morrerá com a troca (Primeiro critério para sua realização)
+
+					if(lacaios.get(i).getVidaAtual() > lacaiosOponente.get(j).getAtaque()){ // Caso em que apenas o lacaio inimigo
+						// morre
+						Jogada mag = new Jogada(TipoJogada.ATAQUE, lacaios.get(i), (Carta) lacaiosOponente.get(j));
+						jogadas.add(mag);
+						minhaMana -= lacaios.get(i).getMana();
+						System.out.println("Jogada: Decidi uma jogada de realizar uma troca: " + lacaios.get(i));
+						usado = true;
+						lacaiosOponente.remove(j);
+						lacaios.remove(i);
+						i--;
+						break;
+
+					}else{ // Caso em que ambos os lacaios morrem
+						if((lacaios.get(i).getMana() < lacaiosOponente.get(j).getMana()) ||
+								(lacaios.get(i).getVidaAtual() < lacaios.get(i).getVidaMaxima()
+										&& lacaios.get(i).getVidaAtual() < lacaiosOponente.get(j).getVidaAtual())){
+							// Caso em que o lacaio do oponente possui maior custo de mana, ou que o lacaio aliado
+							// ja estava danificado e possui menor vida do que o lacaio oponente.
+
+							Jogada mag = new Jogada(TipoJogada.ATAQUE, lacaios.get(i), (Carta) lacaiosOponente.get(j));
+							jogadas.add(mag);
+							minhaMana -= lacaios.get(i).getMana();
+							System.out.println("Jogada: Decidi uma jogada de realizar uma troca: " + lacaios.get(i));
+							usado = true;
+							lacaiosOponente.remove(j);
+							lacaios.remove(i);
+							i--;
+							break;
+						}
+					}
+
+				}
+			}
+
+			if(!usado){ // Caso o lacaio não tenha encontrado nenhuma trocar favorável, ele atacará o herói inimigo
+				Jogada lacaio = new Jogada(TipoJogada.ATAQUE, lacaios.get(i), null);
+				jogadas.add(lacaio);
+				System.out.println("Jogada: Decidi uma jogada de atacar com o lacaio: " + lacaios.get(i));
+			}
+		}
 
 		return jogadas;
 	}
