@@ -113,9 +113,8 @@ public class JogadorRA247361 extends Jogador {
 		}
 		
 		ArrayList<Jogada> minhasJogadas;
-		
-		// O laço abaixo cria jogas de baixar lacaios da mão para a mesa se houver mana disponível.
-		/*if(minhaVida <= 15 || lacaios.size() > lacaiosOponente.size()){
+
+		if(minhaVida <= 15 || lacaios.size() > lacaiosOponente.size()){
 			organizaBaralhoAtq();
 			minhasJogadas = modoAgressivo(minhaMana);
 		}else if(lacaios.size() < lacaiosOponente.size()){
@@ -124,9 +123,7 @@ public class JogadorRA247361 extends Jogador {
 		}else{
 			organizaBaralhoAtq();
 			minhasJogadas = modoAgressivo(minhaMana);
-		}*/
-		organizaBaralhoMana();
-		minhasJogadas = modoCurvaMana(minhaMana);
+		}
 
 
 		
@@ -405,6 +402,9 @@ public class JogadorRA247361 extends Jogador {
 							if(lacaiosOponente.get(j).getVidaAtual() <= ((CartaMagia) mao.get(i)).getMagiaDano()){
 								lacaiosOponente.remove(j);
 								j--;
+							}else{
+								lacaiosOponente.get(j).setVidaAtual(lacaiosOponente.get(j).getVidaAtual() -
+										((CartaMagia) mao.get(i)).getMagiaDano());
 							}
 						}
 						mao.remove(i);
@@ -418,22 +418,6 @@ public class JogadorRA247361 extends Jogador {
 					for (CartaLacaio cartaLacaio : lacaiosOponente) { // Para decidir em qual lacaio será utilizada a
 						// magia de alvo, serão feitas algumas verificações, seguindo uma ordem de prioridade. A primeira
 						// é o critério mínimo para utilização
-
-						/*if (((CartaMagia) mao.get(i)).getMagiaDano() >= lacaiosOponente.get(j).getVidaAtual() &&
-								((CartaMagia) mao.get(i)).getMagiaDano() - lacaiosOponente.get(j).getVidaAtual() <= 1){
-							Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), lacaiosOponente.get(j));
-							jogadas.add(mag);
-							minhaMana -= mao.get(i).getMana();
-							System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
-
-							if(lacaiosOponente.get(j).getVidaAtual() <= ((CartaMagia) mao.get(i)).getMagiaDano()){
-								lacaiosOponente.remove(lacaiosOponente.get(j));
-							}
-							mao.remove(i);
-							i--;
-							break;
-
-						}*/
 
 						if (((CartaMagia) mao.get(i)).getMagiaDano() >= cartaLacaio.getVidaAtual() &&
 								((CartaMagia) mao.get(i)).getMagiaDano() - cartaLacaio.getVidaAtual() <= 1) {
@@ -467,9 +451,7 @@ public class JogadorRA247361 extends Jogador {
 						minhaMana -= mao.get(i).getMana();
 						System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
 
-						if(alvo.getVidaAtual() <= ((CartaMagia) mao.get(i)).getMagiaDano()){
-							lacaiosOponente.remove(alvo);
-						}
+						lacaiosOponente.remove(alvo);
 						mao.remove(i);
 						i--;
 
@@ -489,7 +471,7 @@ public class JogadorRA247361 extends Jogador {
 
 		// Após baixar todos os lacaios, serão realizadas as trocas favoráveis com os lacaios ja presentes
 		// na mesa. Aqueles lacaios que não encontrarem trocas favoráveis atacarão o herói inimigo.
-		//trocasFavoraveis(jogadas);
+		trocasFavoraveis(jogadas);
 
 		return jogadas;
 	}
@@ -675,7 +657,7 @@ public class JogadorRA247361 extends Jogador {
 
 					} else if(mao.get(i) instanceof CartaMagia){
 
-						if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.AREA) {
+						if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.AREA && lacaiosOponente.size() >= 1) {
 							Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), null);
 							jogadas.add(mag);
 							minhaMana -= mao.get(i).getMana();
@@ -706,6 +688,7 @@ public class JogadorRA247361 extends Jogador {
 								minhaMana -= mao.get(i).getMana();
 								System.out.println("Jogada: Decidi uma jogada de usar uma magia: " + mao.get(i));
 								mao.remove(i);
+								lacaiosOponente.remove(bigger);
 								i--;
 
 							}
@@ -739,7 +722,7 @@ public class JogadorRA247361 extends Jogador {
 
 		// Por fim, serão verificadas as trocas favoráveis. Aqueles que não puderam realiza-las atacarão o herói
 		//inimigo.
-		//trocasFavoraveis(jogadas);
+		trocasFavoraveis(jogadas);
 
 		return jogadas;
 	}
