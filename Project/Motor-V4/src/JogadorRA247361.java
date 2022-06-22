@@ -91,6 +91,11 @@ public class JogadorRA247361 extends Jogador {
 			meuAtq += lacaio.getAtaque();
 		}
 
+		int manaMao = 0;
+		for(Carta carta : mao){
+			manaMao += carta.getMana();
+		}
+
 		if(minhaMana <= 9){
 			if(vidaOp < 15 || vidaOp - meuAtq <= 5)  {
 				organizaBaralhoAtq();
@@ -106,7 +111,7 @@ public class JogadorRA247361 extends Jogador {
 			if(vidaOp < 15 || vidaOp - meuAtq <= 5){
 				organizaBaralhoAtq();
 				minhasJogadas = modoAgressivo(minhaMana);
-			}else if(lacaios.size() < lacaiosOponente.size() || minhaVida <= atqInimigo){
+			}else if(lacaios.size() < lacaiosOponente.size() ||minhaVida <= atqInimigo){
 				organizaBaralhoMana();
 				minhasJogadas = modoControle(minhaMana);
 			}else{
@@ -488,11 +493,11 @@ public class JogadorRA247361 extends Jogador {
 				// primeira combinação exata encontrada será a combinação de mais alto ataque.
 
 
-				for(int j=i + 1; j<mao.size(); j++){
-					if(mao.get(i).getMana() + mao.get(j).getMana() == minhaMana) {
-						if (mao.get(j) instanceof CartaLacaio && lacaios.size() <= 5) {
+				for(int j=i + 1; j<mao.size(); j++){ // Procurando a segunda carta
 
-							// Dois lacaios somam a mana exata
+					if(mao.get(i).getMana() + mao.get(j).getMana() == minhaMana) {
+
+						if (mao.get(j) instanceof CartaLacaio && lacaios.size() <= 5) { // Caso sejam dois lacaios
 							finalizado = true;
 
 							Jogada lac1 = new Jogada(TipoJogada.LACAIO, mao.get(i), null);
@@ -513,16 +518,16 @@ public class JogadorRA247361 extends Jogador {
 
 						}
 						if (mao.get(j) instanceof CartaMagia) {
+
 							if(((CartaMagia) mao.get(j)).getMagiaTipo() == TipoMagia.ALVO && lacaiosOponente.size() > 0){
 
 								for(int k=0; k<lacaiosOponente.size(); k++){ // Fazendo as verificações para cada uma
-									// das cartasLacaio do oponente em jogo
+									// das cartasLacaio do oponente em jogo, para ver se a carta magia de alvo poderá ou
+									// não ser utilizada
 
 									if(lacaiosOponente.get(k).getMana() > mao.get(j).getMana() &&
 											((CartaMagia) mao.get(j)).getMagiaDano() >= lacaiosOponente.get(k).getVidaAtual() &&
 											((CartaMagia) mao.get(j)).getMagiaDano() - lacaiosOponente.get(k).getVidaAtual() <= 1){
-										// Caso em que uma magia de alvo + lacaio tem o custo exato de mana, e a magia de alvo
-										//cumpre os requisitos
 
 										finalizado = true;
 										Jogada lac1 = new Jogada(TipoJogada.LACAIO, mao.get(i), null);
@@ -546,17 +551,20 @@ public class JogadorRA247361 extends Jogador {
 
 							}else if(((CartaMagia) mao.get(j)).getMagiaTipo() == TipoMagia.AREA){
 
-								if(lacaiosOponente.size() >= 2){
+								if(lacaiosOponente.size() >= 2){ // A magia de área só será utilizada caso existam mais
+									// de dois lacaios oponentes à mesa
 									boolean satisfeito = false;
 
 									for (CartaLacaio cartaLacaio : lacaiosOponente) {
 
 										if (((CartaMagia) mao.get(j)).getMagiaDano() >= cartaLacaio.getVidaAtual()) {
+											// Verificando se a carta eliminará algum lacaio
 											satisfeito = true;
 											break;
 										}
 									}
-									if(satisfeito){
+									if(satisfeito){ // Caso elimine, a magia será usada e os lacaios oponentes serão
+										// eliminados ou terão sua vida decrementada
 										for(int k=0; k< lacaiosOponente.size(); k++){
 											if(((CartaMagia) mao.get(j)).getMagiaDano() >= lacaiosOponente.get(k).getVidaAtual()){
 												lacaiosOponente.remove(k);
@@ -587,9 +595,12 @@ public class JogadorRA247361 extends Jogador {
 
 
 							}else if(((CartaMagia) mao.get(j)).getMagiaTipo() == TipoMagia.BUFF){
+
 								if(lacaios.size() > 0){
+
 									CartaLacaio bigger = lacaios.get(0);
-									for(int k=1; k< lacaios.size(); k++){
+									for(int k=1; k< lacaios.size(); k++){ // Verificando qual será o lacaio a ser
+										// buffado
 										if(bigger.getAtaque() < lacaios.get(k).getAtaque()){
 											bigger = lacaios.get(k);
 										}
@@ -644,7 +655,8 @@ public class JogadorRA247361 extends Jogador {
 						i--;
 						qtd++;
 
-					} else if(mao.get(i) instanceof CartaMagia){
+					} else if(mao.get(i) instanceof CartaMagia){ // A utilização das magias seguirá o mesmo critério
+						// do modo "Controle", ou seja, priorizará eliminar os lacaios à mesa do oponente
 
 						if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.AREA && lacaiosOponente.size() >= 1) {
 							Jogada mag = new Jogada(TipoJogada.MAGIA, mao.get(i), null);
