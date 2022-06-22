@@ -1,3 +1,25 @@
+/* Foram implemetados 3 modos de jogo: modo Agressivo, modo Controle e modo Curva de mana (todos seguem as
+orientações presentes no enunciado do trabalho). A explicação do comportamento específico de cada um dos
+modos se encontra em suas respectivas funções, ao longo deste arquivo.
+Para a troca entre os modos de jogo, foram escolhidos alguns parâmetros à serem observados, sendo eles:
+vida do oponente, minha vida, quantidade de lacaios do oponente na mesa, quantidades de lacaios meus na mesa,
+ataque do inimigo (soma dos ataques dos lacaios inimigos à mesa) e meu ataque (soma dos meus lacaios à mesa), e
+a minha mana.
+O primeiro critério observado é a mana. Caso essa supere 9, não se torna mais viável a utilização da estratégia
+de curva de mana, e portanto ela não entra nas verificações.
+O próximo critério à ser observado é a vida do oponente e o meu ataque. Caso a vida do oponente seja < 15,
+é adotada estratégia agressiva, afim de eliminar o inimigo o mais rápido possível. Caso a diferneça de sua vida e
+de meu ataque seja < 5, tem-se um caso em que a eliminação do inimigo está próxima, compensando portanto atacá-lo.
+Depois, é verificada a quantidade de lacaios minha e do oponente, bem como o ataque do inimigo e minha vida. Caso
+o inimigo possua mais lacaios à mesa do que eu, deve-se utilizar a estratégia de controle para controlar o tabuleiro
+novamente. Caso o ataque do inimigo seja superior à minha vida, é necessário eliminar lacaios do oponente para não
+ser eliminado, adotando-se a mesma estratégia.
+Caso nenhuma das duas verificações acima seja verdadeira e a mana da rodada for <=9, é adotado o modo de curva de
+mana, para uma utilização eficiente da mana, unindo o controle e o ataque ao oponente de forma equilibrada. Caso
+a mana seja >9, é adotado o modo de ataque, afim de danificar o inimigo o máximo possível, tendo em vista que será
+possível utilizar muitas cartas, dado a alta quantidade de mana disponível.*/
+
+
 import java.util.ArrayList;
 
 /**
@@ -11,97 +33,42 @@ public class JogadorRA247361 extends Jogador {
 
 	/**
 	  * O método construtor do JogadorAleatorio.
-	  * 
-	  * @param maoInicial Contém a mão inicial do jogador. Deve conter o número de cartas correto dependendo se esta classe Jogador que está sendo construída é o primeiro ou o segundo jogador da partida. 
+	  *
+	  * @param maoInicial Contém a mão inicial do jogador. Deve conter o número de cartas correto dependendo se esta classe Jogador que está sendo construída é o primeiro ou o segundo jogador da partida.
 	  * @param primeiro   Informa se esta classe Jogador que está sendo construída é o primeiro jogador a iniciar nesta jogada (true) ou se é o segundo jogador (false).
 	  */
 	public JogadorRA247361(ArrayList<Carta> maoInicial, boolean primeiro){
 		primeiroJogador = primeiro;
-		
+
 		mao = maoInicial;
 		lacaios = new ArrayList<CartaLacaio>();
 		lacaiosOponente = new ArrayList<CartaLacaio>();
 		organizaBaralhoAtq();
-		
+
 		// Mensagens de depuração:
 		System.out.println("*Classe JogadorRA247361* Sou o " + (primeiro?"primeiro":"segundo") + " jogador (classe: JogadorAleatorio)");
 		System.out.println("Mao inicial:");
 		for(int i = 0; i < mao.size(); i++)
 			System.out.println("ID " + mao.get(i).getID() + ": " + mao.get(i));
 	}
-	
+
 	/**
 	  * Um método que processa o turno de cada jogador. Este método deve retornar as jogadas do Jogador decididas para o turno atual (ArrayList de Jogada).
-	  * 
+	  *
 	  * @param mesa   O "estado do jogo" imediatamente antes do início do turno corrente. Este objeto de mesa contém todas as informações 'públicas' do jogo (lacaios vivos e suas vidas, vida dos heróis, etc).
 	  * @param cartaComprada   A carta que o Jogador recebeu neste turno (comprada do Baralho). Obs: pode ser null se o Baralho estiver vazio ou o Jogador possuir mais de 10 cartas na mão.
 	  * @param jogadasOponente   Um ArrayList de Jogada que foram os movimentos utilizados pelo oponente no último turno, em ordem.
 	  * @return            um ArrayList com as Jogadas decididas
 	  */
 	public ArrayList<Jogada> processarTurno (Mesa mesa, Carta cartaComprada, ArrayList<Jogada> jogadasOponente){
-		int minhaMana, minhaVida;
-
-		if(cartaComprada != null){ // Inserindo a carta comprada na mão conforme a organização esperada
-			if(cartaComprada instanceof CartaLacaio){
-				for(int i=0; i < mao.size(); i++){
-					if(mao.get(i) instanceof CartaLacaio) {
-						if (((CartaLacaio) mao.get(i)).getAtaque() < ((CartaLacaio) cartaComprada).getAtaque()) {
-							mao.add(i, cartaComprada);
-							break;
-						}
-					}else{
-						mao.add(i, cartaComprada);
-						break;
-					}
-				}
-			}else{
-				for(int i=0; i < mao.size(); i++) {
-					if(!(mao.get(i) instanceof CartaLacaio)) {
-						if (((CartaMagia) cartaComprada).getMagiaTipo() == TipoMagia.ALVO) {
-							if (((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.ALVO) {
-								if (((CartaMagia) mao.get(i)).getMagiaDano() < ((CartaMagia) cartaComprada).getMagiaDano()) {
-									mao.add(i, cartaComprada);
-									break;
-								}
-							}else{
-								mao.add(i, cartaComprada);
-								break;
-							}
-						}else if(((CartaMagia) cartaComprada).getMagiaTipo() == TipoMagia.AREA){
-							if(((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.AREA){
-								if (((CartaMagia) mao.get(i)).getMagiaDano() < ((CartaMagia) cartaComprada).getMagiaDano()) {
-									mao.add(i, cartaComprada);
-									break;
-								}
-							}else if(((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.BUFF){
-								mao.add(i, cartaComprada);
-								break;
-							}
-						}else{
-							if(((CartaMagia) mao.get(i)).getMagiaTipo() == TipoMagia.BUFF){
-								if (((CartaMagia) mao.get(i)).getMagiaDano() < ((CartaMagia) cartaComprada).getMagiaDano()) {
-									mao.add(i, cartaComprada);
-									break;
-								}else if(i== mao.size()){
-									mao.add(i, cartaComprada);
-									break;
-								}
-							}else if(i== mao.size()){
-								mao.add(i, cartaComprada);
-								break;
-							}
-						}
-					}
-				}
-			}
-
-
-		}
+		int minhaMana, minhaVida, vidaOp;
+		mao.add(cartaComprada);
 		if(primeiroJogador){
 			minhaMana = mesa.getManaJog1();
 			minhaVida = mesa.getVidaHeroi1();
 			lacaios = mesa.getLacaiosJog1();
 			lacaiosOponente = mesa.getLacaiosJog2();
+			vidaOp = mesa.getVidaHeroi2();
 			//System.out.println("--------------------------------- Começo de turno pro jogador1");
 		}
 		else{
@@ -109,24 +76,46 @@ public class JogadorRA247361 extends Jogador {
 			minhaVida = mesa.getVidaHeroi2();
 			lacaios = mesa.getLacaiosJog2();
 			lacaiosOponente = mesa.getLacaiosJog1();
+			vidaOp = mesa.getVidaHeroi1();
 			//System.out.println("--------------------------------- Começo de turno pro jogador2");
 		}
-		
-		ArrayList<Jogada> minhasJogadas;
 
-		if(minhaVida <= 15 || lacaios.size() > lacaiosOponente.size()){
-			organizaBaralhoAtq();
-			minhasJogadas = modoAgressivo(minhaMana);
-		}else if(lacaios.size() < lacaiosOponente.size()){
-			organizaBaralhoMana();
-			minhasJogadas = modoControle(minhaMana);
+		ArrayList<Jogada> minhasJogadas;
+		int atqInimigo = 0;
+		for(CartaLacaio lacaio: lacaiosOponente){
+			atqInimigo += lacaio.getAtaque();
+		}
+
+		int meuAtq = 0;
+		for(CartaLacaio lacaio: lacaios){
+			meuAtq += lacaio.getAtaque();
+		}
+
+		if(minhaMana <= 9){
+			if(vidaOp < 15 || vidaOp - meuAtq <= 5)  {
+				organizaBaralhoAtq();
+				minhasJogadas = modoAgressivo(minhaMana);
+			}else if(lacaios.size() < lacaiosOponente.size() || minhaVida <= atqInimigo){
+				organizaBaralhoMana();
+				minhasJogadas = modoControle(minhaMana);
+			}else{
+				organizaBaralhoMana();
+				minhasJogadas = modoCurvaMana(minhaMana);
+			}
 		}else{
-			organizaBaralhoAtq();
-			minhasJogadas = modoAgressivo(minhaMana);
+			if(vidaOp < 15 || vidaOp - meuAtq <= 5){
+				organizaBaralhoAtq();
+				minhasJogadas = modoAgressivo(minhaMana);
+			}else if(lacaios.size() < lacaiosOponente.size() || minhaVida <= atqInimigo){
+				organizaBaralhoMana();
+				minhasJogadas = modoControle(minhaMana);
+			}else{
+				organizaBaralhoAtq();
+				minhasJogadas = modoAgressivo(minhaMana);
+			}
 		}
 
 
-		
 		return minhasJogadas;
 	}
 
@@ -530,7 +519,7 @@ public class JogadorRA247361 extends Jogador {
 									// das cartasLacaio do oponente em jogo
 
 									if(lacaiosOponente.get(k).getMana() > mao.get(j).getMana() &&
-									((CartaMagia) mao.get(j)).getMagiaDano() >= lacaiosOponente.get(k).getVidaAtual() &&
+											((CartaMagia) mao.get(j)).getMagiaDano() >= lacaiosOponente.get(k).getVidaAtual() &&
 											((CartaMagia) mao.get(j)).getMagiaDano() - lacaiosOponente.get(k).getVidaAtual() <= 1){
 										// Caso em que uma magia de alvo + lacaio tem o custo exato de mana, e a magia de alvo
 										//cumpre os requisitos
@@ -679,7 +668,7 @@ public class JogadorRA247361 extends Jogador {
 								CartaLacaio bigger = lacaiosOponente.get(0);
 								for(CartaLacaio lac : lacaiosOponente){
 									if(lac.getVidaAtual() <= ((CartaMagia) mao.get(i)).getMagiaDano() &&
-									lac.getMana() > bigger.getMana()){
+											lac.getMana() > bigger.getMana()){
 										bigger = lac;
 									}
 								}

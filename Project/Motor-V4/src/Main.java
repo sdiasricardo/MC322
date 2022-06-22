@@ -37,7 +37,7 @@ public class Main {
 		//umaPartida(baralho1, baralho2, verbosidade, tempoLimite);
 		
 		// Rotina que executa múltiplas partidas de LaMa
-		multiplasPartidas(baralho1, baralho2, verbosidade, tempoLimite, 10000);
+		multiplasPartidas(baralho1, baralho2, verbosidade, tempoLimite, 100);
 	}
 	
 	/**
